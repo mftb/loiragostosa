@@ -11,15 +11,17 @@ void yywrap(void);
 	int intval;
 }
 
-%token <intval> T_DIGIT
-%token <str> T_STRING
+%token <str> ANY_CHAR
+%token <str> HEADERS
+%token <str> AUTHOR
+
+%error-verbose
 
 %%
 
-stmt_list:  	stmt ';'
-	 | 	stmt_list stmt ';'
-
-stmt: T_STRING '=' T_DIGIT     { printf("%s", $1); }
+stmt: ANY_CHAR			{ printf("%s", $1);	}
+stmt: HEADERS				{ printf("HEADERS IGNORADO\n");	}
+stmt: AUTHOR				{ printf("AUTHOR IGNORADO\n");	}
 
 %%
 
@@ -30,14 +32,14 @@ void yyerror(const char* errmsg)
 
 
 void yywrap(void){
-	return 1;
+	return ;
 }
 
 
 void main()
 {
 	yyparse();
-	return 0;
+	return ;
 }
 
 
