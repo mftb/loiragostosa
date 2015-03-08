@@ -29,7 +29,7 @@ stmt_list: 	stmt_list stmt
 ;
 
 stmt:
-		BEGIN_DOC BREAK {printf("<body onload=\"myFunction()\">\n");}
+	  BEGIN_DOC BREAK {printf("<body onload=\"myFunction()\">\n");}
 	| END_DOC BREAK {printf("</body>\n");}
 	|	MAKE_TITLE BREAK {printf("<h1>%s</h1>\n",title);}
 	| TITLE '{' T_STRING '}' BREAK {strcpy(title,$3);}
@@ -43,12 +43,12 @@ stmt:
 	| phrase BREAK {printf("%s\n",$1);}
 ;
 
-phrase: phrase CIFRAO 					{$$ = concat(2,$1,"$");}
-	| phrase T_STRING							{$$ = concat(2,$1,$2);}
-  | phrase MATH									{$$ = concat(4,$1,"(",$2,")");}
-	| T_STRING										{$$ = $1;}
-  | CIFRAO											{$$ = "$";}
-  | MATH												{$$ = concat(3,"(",$1,")");}
+phrase:   phrase CIFRAO 					{$$ = concat(2,$1,"$");}
+	| phrase T_STRING					{$$ = concat(2,$1,$2);}
+        | phrase MATH						{$$ = concat(4,$1,"(",$2,")");}
+	| T_STRING						{$$ = $1;}
+        | CIFRAO						{$$ = "$";}
+        | MATH							{$$ = concat(3,"(",$1,")");}
 %%
  
 char* concat(int count, ...)
