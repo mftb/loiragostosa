@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 char *concat(int count, ...);
+char title[1000];
 
 %}
  
@@ -13,16 +14,9 @@ char *concat(int count, ...);
 	int  *intval;
 }
 
-%token <str> T_STRING
-%token T_SELECT
-%token T_FROM
-%token T_CREATE
-%token T_TABLE
-%token T_INSERT
-%token T_INTO
-%token T_VALUES
+%token <str> T_STRING TITLE BEGIN_DOC END_DOC MAKE_TITLE BOLD ITALIC LIST_START ITEM LIST_END PICTURE BREAK CIFRAO MATH
 
-%type <str> create_stmt insert_stmt col_list  values_list 
+%type <str> phrase
 
 %start stmt_list
 
@@ -35,40 +29,26 @@ stmt_list: 	stmt_list stmt
 ;
 
 stmt:
-		create_stmt ';'	{printf("%s",$1);}
-	|	insert_stmt ';'	{printf("%s",$1);}
-
+		BEGIN_DOC BREAK {printf("<body onload=\"myFunction()\">\n");}
+	| END_DOC BREAK {printf("</body>\n");}
+	|	MAKE_TITLE BREAK {printf("<h1>%s</h1>\n",title);}
+	| TITLE '{' T_STRING '}' BREAK {strcpy(title,$3);}
+	| BOLD '{' T_STRING '}' BREAK {printf("<b>%s</b>\n",$3);}
+	| ITALIC '{' T_STRING '}' BREAK {printf("<i>%s</i>\n",$3);}
+	| LIST_START BREAK {printf("<ul>\n");}
+	| ITEM T_STRING BREAK {printf("<li>%s</li>\n",$2);}
+	| LIST_END BREAK {printf("</ul>\n");} 
+	| PICTURE '{' T_STRING '}' BREAK {printf("<img src=\"%s\">\n",$3);}
+	| BREAK {printf("<br>\n");}
+	| phrase BREAK {printf("%s\n",$1);}
 ;
 
-create_stmt:
-	   T_CREATE T_TABLE T_STRING '(' col_list ')' 	{	FILE *F = fopen($3, "w"); 
-								fprintf(F, "%s\n", $5);
-								fclose(F);
-								$$ = concat(5, "\nCREATE TABLE: ", $3, "\nCOL_NAME: ", $5, "\n\n");
-							}
-;
-
-col_list:
-		T_STRING 		{ $$ = $1; }
-	| 	col_list ',' T_STRING 	{ $$ = concat(3, $1, ";", $3); }
-;
-
-
-insert_stmt:
-	   T_INSERT T_INTO T_STRING T_VALUES '(' values_list ')' { FILE *F = fopen($3, "a"); 
-								  fprintf(F, "%s\n", $6);
-								  fclose(F);
-								  $$ = concat(5, "\nINSERT INTO TABLE: ", $3, "\nVALUES: ", $6, "\n\n");
-							 	}
-;
-
-values_list:
-		T_STRING 		{ $$ = $1; }
-	| 	col_list ',' T_STRING 	{ $$ = concat(3, $1, ";", $3); }
-;
-
-
- 
+phrase: phrase CIFRAO 					{$$ = concat(2,$1,"$");}
+	| phrase T_STRING							{$$ = concat(2,$1,$2);}
+  | phrase MATH									{$$ = concat(4,$1,"(",$2,")");}
+	| T_STRING										{$$ = $1;}
+  | CIFRAO											{$$ = "$";}
+  | MATH												{$$ = concat(3,"(",$1,")");}
 %%
  
 char* concat(int count, ...)
@@ -107,7 +87,18 @@ int yywrap(void) { return 1; }
  
 int main(int argc, char** argv)
 {
+		 printf("<html>\n");
+		 printf("<head>\n");
+		 printf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n");
+		 printf("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n");
+     printf("<script type=\"text/x-mathjax-config\">\n");
+		 printf("MathJax.Hub.Config({tex2jax: {inlineMath: [[\"($\",\"$)\"]]}});\n");
+		 printf("</script>\n");
+     printf("<script type=\"text/javascript\" src=\"https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML\">\n");
+  	 printf("</script>\n");
+		 printf("</head>\n");
      yyparse();
+ 		 printf("</html>\n");
      return 0;
 }
 

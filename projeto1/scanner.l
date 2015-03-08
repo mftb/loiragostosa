@@ -2,32 +2,54 @@
 #include "parser.h"
 %}
 
-STRING [a-z][a-z0-9_]*
-WHITESPACE [ \n\r\t]+
+BREAK [\n]
+STRING [a-zA-Z0-9\.$(),:? !-][a-zA-Z0-9\.(),: ?!-]*
+DU_HEADER 	[\\][d|u][a-zA-Z0-9]+\[[a-zA-Z0-9,]+\]\{[a-z]+\}[\n]+
+U_HEADER	  [\\][d|u][a-zA-Z0-9]+[a-zA-Z0-9,]+\{[a-z]+\}[\n]+
+AUTHOR		[\\][a][a-z]+[{][a-zA-Z1-9 ]+[}][\n]+
+LIST_START [ ]*\\begin\{itemize\}
+ITEM			 [ ]*\\item
+LIST_END	 [ ]*\\end\{itemize\}
 ANY_CHAR .
+MATH \$[a-zA-Z0-9\.(),\\: ?!-]+\$
+CIFRAO \\\$
 
 %option case-insensitive
 
 %%
 
-{WHITESPACE} /* ignore */ ;
-"SELECT" 	{return T_SELECT;}
-"FROM" 		{return T_FROM; }
-"CREATE"	{return T_CREATE;}
-"TABLE"		{return T_TABLE;}
-"INSERT"	{return T_INSERT;}
-"INTO"		{return T_INTO;}
-"VALUES"	{return T_VALUES;}
-"("		{return '(';}
-")"		{return ')';} 
-"," 		{return ',';}
-";"		{return ';';}
-
-
+{DU_HEADER}	/* ignore */ ;
+{U_HEADER}	/* ignore */ ;
+{AUTHOR}	/* ignore */ ;
+"\\title"		{return TITLE;}
+"\\begin{document}"	{return BEGIN_DOC;}
+"\\end{document}"	{return END_DOC;}
+"\\maketitle"	{return MAKE_TITLE;}
+"\\textbf"	{return BOLD;}
+"\\textit"	{return ITALIC;}
+{LIST_START}	{return LIST_START;}
+{ITEM}	{return ITEM;}
+{LIST_END}	{return LIST_END;}
+"\\includegraphics"	{return PICTURE;}	
+"("	{return '(';}
+")"	{return ')';} 
+","	{return ',';}
+";"	{return ';';}
+"}"	{return '}';}
+"{"	{return '{';}
+{CIFRAO} {return CIFRAO;}
+{MATH} {
+		yylval.str = (char *) strdup(yytext);
+		return MATH;
+}
 {STRING} {	
 	yylval.str = (char *) strdup(yytext);
 	return T_STRING;
 }
+
+
+
+{BREAK}	{return BREAK;}
 
 {ANY_CHAR} {
 	printf ("Caracter %c (ASCII=%d) inesperado\n", yytext[0], yytext[0]);
