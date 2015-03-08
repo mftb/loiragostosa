@@ -89,6 +89,7 @@ int main(int argc, char** argv)
 {
 		 printf("<html>\n");
 		 printf("<head>\n");
+		 printf("<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js\"></script>");
 		 printf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n");
 		 printf("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n");
      printf("<script type=\"text/x-mathjax-config\">\n");
