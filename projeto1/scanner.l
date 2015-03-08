@@ -11,7 +11,7 @@ LIST_START [ ]*\\begin\{itemize\}
 ITEM			 [ ]*\\item
 LIST_END	 [ ]*\\end\{itemize\}
 BIB_ITEM         [ ]*\\bibitem
-CITE            \\cite\{[a-zA-Z0-9\.(),: ?!-]+\}
+CITE            \\cite
 ANY_CHAR .
 MATH \$[a-zA-Z0-9\.(),\\: ?!-]+\$
 CIFRAO \\\$
@@ -47,10 +47,7 @@ CIFRAO \\\$
 	return MATH;
 }
 {BIB_ITEM} {return BIB_ITEM;}
-{CITE} {
-        yylval.str = (char *) strdup(yytext);
-        return CITE;
-}
+{CITE} {return CITE;}
 {STRING} {	
 	yylval.str = (char *) strdup(yytext);
 	return T_STRING;

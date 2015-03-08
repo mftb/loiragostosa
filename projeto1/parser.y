@@ -7,6 +7,8 @@
 char *concat(int count, ...);
 char title[1000];
 int refs;
+int cite;
+
 %}
  
 %union{
@@ -41,19 +43,19 @@ stmt:
 	| BREAK {printf("<br>\n");}
 	| phrase BREAK {printf("%s\n",$1);}
         | BIB_START BREAK {printf("<h2>References</h2><br>\n");}
-        | BIB_ITEM '{' T_STRING '}' T_STRING BREAK{printf("<br><span id=%d name=\"%s\"></span>%s\n",refs++,$3,$5);}
+        | BIB_ITEM '{' T_STRING '}' T_STRING BREAK{printf("<br><span id=%d name=\"%s\">[%d]</span>%s\n",refs++,$3,refs,$5);}
 ;
 
 phrase:   phrase CIFRAO 					{$$ = concat(2,$1,"$");}
-        | phrase PICTURE '{' T_STRING '}'                       {$$ = concat(3,"<img src=\"",$4,"\">\n");}
+        | phrase PICTURE '{' T_STRING '}'                       {$$ = concat(4,$1,"<img src=\"",$4,"\">\n");}
 	| phrase T_STRING					{$$ = concat(2,$1,$2);}
         | phrase MATH						{$$ = concat(4,$1,"(",$2,")");}
-        | phrase CITE                                           {$$ = concat(2,$1,$2);}
+        | phrase CITE '{' T_STRING '}'		{$$ = concat(4,$1,"<span id=\"",$4,"\"></span>");}
 	| T_STRING						{$$ = $1;}
         | CIFRAO						{$$ = "$";}
         | MATH							{$$ = concat(3,"(",$1,")");}
         | PICTURE '{' T_STRING '}'                              {$$ = concat(3,"<img src=\"",$3,"\">\n");}
-        | CITE                                                  {$$ = $1;}
+        | CITE '{' T_STRING '}'                                 {$$ = concat(3,"<span id=\"",$3,"\"></span>");}
 %%
  
 char* concat(int count, ...)
@@ -95,7 +97,7 @@ int main(int argc, char** argv)
                  refs = 0;
 		 printf("<html>\n");
 		 printf("<head>\n");
-		 printf("<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js\"></script>");
+		 printf("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js\"></script>");
 		 printf("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n");
 		 printf("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n");
      printf("<script type=\"text/x-mathjax-config\">\n");
@@ -103,6 +105,13 @@ int main(int argc, char** argv)
 		 printf("</script>\n");
      printf("<script type=\"text/javascript\" src=\"https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML\">\n");
   	 printf("</script>\n");
+		 printf("<script>\n");
+		 printf("$( document ).ready(function() {\n");
+		 printf("var i = 0;\nvar name = $('#0').attr('name');\n");
+		 printf("while(name != null){\n");
+		 printf("$('[id=\"' + name + '\"]').text(\"[\" + i + \"]\");\ni++;\n");
+		 printf("name = $('#' + i).attr('name');\n");
+		 printf("}\n});\n</script>\n");
 		 printf("</head>\n");
      yyparse();
  		 printf("</html>\n");

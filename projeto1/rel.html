@@ -1,11 +1,22 @@
 <html>
 <head>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({tex2jax: {inlineMath: [["($","$)"]]}});
 </script>
 <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<script>
+$( document ).ready(function() {
+var i = 0;
+var name = $('#0').attr('name');
+while(name != null){
+$('[id="' + name + '"]').text("[" + i + "]");
+i++;
+name = $('#' + i).attr('name');
+}
+});
 </script>
 </head>
 <body>
@@ -72,8 +83,7 @@ Nesta secao, a seguinte notacao sera utilizada:
 <li> valor da utilidade do produto j para o usuario i</li>
 <li> i-esima linha da matriz A, que corresponde ao</li>
 vetor de utilidades do i-esimo usuario.
-Caracter \ (ASCII=92) inesperado
-ite i-esima coluna a matriz A, que corresponde a 
+<li> i-esima coluna a matriz A, que corresponde a </li>
 utilidade de um produto para todos os usuarios.
 <li> Melhor aproximacao com posto k de A, obtida atraves da tecnica de SVD.</li>
 <li> valor da utilidade do r-esimo produto com maior utilidade</li>
@@ -105,7 +115,7 @@ Para o caso em que o usuario nao esta no comite, e calculada a esperanca do nume
 de provas que ele tera que fazer. Como a ordem dos produtos
 recomendados e aleatoria, o numero de provas que um usuario tera que fazer
 e uma variavel aleatoria geometrica. Logo, basta fazer a analise da esperanca
-para essa variavel aleatoria \cite{MG}.
+para essa variavel aleatoria <span id="MG"></span>.
 O resultado do teorema aparece com a esperanca do numero de provas para
 cada caso.
 <br>
@@ -117,26 +127,26 @@ e ($\Omega(n)$), ja que os usuarios do comite tem que provar todos os
 algoritmos. 
 Um segundo ponto contra esta tecnica e a existencia de usuarios desonestos,
 que, quando escolhidos para o comite, atrapalham o funcionamento do 
-algoritmo de recomendacoes \cite{Boney96}.
+algoritmo de recomendacoes <span id="Boney96"></span>.
 <br>
 <b>Conclusao e trabalhos futuros</b>
 <br>
 Atraves deste estudo, verificou-se a existencia de solucoes com abordagens
 totalmente diferentes para o problema de sistemas de recomendacoes. Mas o mais
 importante foi o aprendizado das tecnicas mais gerais para resolucao de problemas
-como por exemplo SVD. 
+como por exemplo SVD <span id="HK"></span>. 
 Potenciais trabalhos futuros sao a implementacao e comparacao dos algoritmos na pratica
 ou alteracao neles para que ao inves de dispor de informacoes de colunas inteiras, os
-algoritmos funcionem com posicoes esparsas na matriz. 
+algoritmos funcionem com posicoes esparsas na matriz <span id="Boney96"></span>.
 <br>
 <br>
 <h2>References</h2><br>
-<br><span id=0 name="Boney96"></span> Boney, L., Tewfik, A.H., and Hamdy, K.N., Digital 
+<br><span id=0 name="Boney96">[0]</span> Boney, L., Tewfik, A.H., and Hamdy, K.N., Digital 
         Watermarks for Audio Signals, Proceedings of the Third IEEE
         International Conference on Multimedia, pp. 473-480, June 1996.
-<br><span id=1 name="MG"></span> Goossens, M., Mittelbach, F., Samarin, A LaTeX Companion, Addison-Wesley, Reading, MA, 1994.
-<br><span id=2 name="HK"></span> Kopka, H., Daly P.W., A Guide to LaTeX, Addison-Wesley, Reading, MA, 1999.
-<br><span id=3 name="Pan"></span> Pan, D., A Tutorial on MPEG/Audio Compression, IEEE Multimedia, Vol.2, pp.60-74, Summer 1998.
+<br><span id=1 name="MG">[1]</span> Goossens, M., Mittelbach, F., Samarin, A LaTeX Companion, Addison-Wesley, Reading, MA, 1994.
+<br><span id=2 name="HK">[2]</span> Kopka, H., Daly P.W., A Guide to LaTeX, Addison-Wesley, Reading, MA, 1999.
+<br><span id=3 name="Pan">[3]</span> Pan, D., A Tutorial on MPEG/Audio Compression, IEEE Multimedia, Vol.2, pp.60-74, Summer 1998.
 <br>
 <br>
 <br>
