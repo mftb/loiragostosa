@@ -10,6 +10,7 @@ AUTHOR		[\\][a][a-z]+[{][a-zA-Z1-9 ]+[}][\n]+
 LIST_START [ ]*\\begin\{itemize\}
 ITEM			 [ ]*\\item
 LIST_END	 [ ]*\\end\{itemize\}
+BIB_ITEM        [ ]*\\bibitem{[a-zA-Z0-9\.(),: ?!-]+}
 ANY_CHAR .
 MATH \$[a-zA-Z0-9\.(),\\: ?!-]+\$
 CIFRAO \\\$
@@ -27,6 +28,8 @@ CIFRAO \\\$
 "\\maketitle"	{return MAKE_TITLE;}
 "\\textbf"	{return BOLD;}
 "\\textit"	{return ITALIC;}
+"\\begin{thebibliography}"      {return BIB_START;}
+"\\end{thebibliography}"        {return BIB_END;}
 {LIST_START}	{return LIST_START;}
 {ITEM}	{return ITEM;}
 {LIST_END}	{return LIST_END;}
@@ -39,8 +42,12 @@ CIFRAO \\\$
 "{"	{return '{';}
 {CIFRAO} {return CIFRAO;}
 {MATH} {
-		yylval.str = (char *) strdup(yytext);
-		return MATH;
+	yylval.str = (char *) strdup(yytext);
+	return MATH;
+}
+{BIB_ITEM} {
+        yylval.str = (char *) strdup(yytext);
+        return BIB_ITEM;
 }
 {STRING} {	
 	yylval.str = (char *) strdup(yytext);
