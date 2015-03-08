@@ -74,7 +74,7 @@ Nesta secao, a seguinte notacao sera utilizada:
 \item valor da utilidade do produto j para o usuario i
 \item i-esima linha da matriz A, que corresponde ao
 vetor de utilidades do i-esimo usuario.
-\item i-esima coluna a matriz A, que corresponde a 
+\ite i-esima coluna a matriz A, que corresponde a 
 utilidade de um produto para todos os usuarios.
 \item Melhor aproximacao com posto k de A, obtida atraves da tecnica de SVD.
 \item valor da utilidade do r-esimo produto com maior utilidade
@@ -97,7 +97,6 @@ Portanto a partir da escolha das $ak$ linhas, podemos formar uma matriz $V$ de t
 A ideia de escolher um numero constante de colunas acontece pois todo usuario
 que deseja obter uma recomendacao deve responder inicialmente um pequeno 
 questionario, dando alguma informacao sua para que o algoritmo de recomendacao
-
 \textbf{Ideia da prova}
 
 Primeiramente separa-se os casos em que o usuario faz parte do comite e quando
@@ -107,7 +106,7 @@ Para o caso em que o usuario nao esta no comite, e calculada a esperanca do nume
 de provas que ele tera que fazer. Como a ordem dos produtos
 recomendados e aleatoria, o numero de provas que um usuario tera que fazer
 e uma variavel aleatoria geometrica. Logo, basta fazer a analise da esperanca
-para essa variavel aleatoria.
+para essa variavel aleatoria \cite{MG}.
 O resultado do teorema aparece com a esperanca do numero de provas para
 cada caso.
 
@@ -119,7 +118,7 @@ e $\Omega(n)$, ja que os usuarios do comite tem que provar todos os
 algoritmos. 
 Um segundo ponto contra esta tecnica e a existencia de usuarios desonestos,
 que, quando escolhidos para o comite, atrapalham o funcionamento do 
-algoritmo de recomendacoes.
+algoritmo de recomendacoes \cite{Boney96}.
 
 \textbf{Conclusao e trabalhos futuros}
 
@@ -131,6 +130,15 @@ Potenciais trabalhos futuros sao a implementacao e comparacao dos algoritmos na 
 ou alteracao neles para que ao inves de dispor de informacoes de colunas inteiras, os
 algoritmos funcionem com posicoes esparsas na matriz. 
 
+
+\begin{thebibliography}
+    \bibitem{Boney96} Boney, L., Tewfik, A.H., and Hamdy, K.N., Digital 
+        Watermarks for Audio Signals, Proceedings of the Third IEEE
+        International Conference on Multimedia, pp. 473-480, June 1996.
+    \bibitem{MG} Goossens, M., Mittelbach, F., Samarin, A LaTeX Companion, Addison-Wesley, Reading, MA, 1994.
+    \bibitem{HK} Kopka, H., Daly P.W., A Guide to LaTeX, Addison-Wesley, Reading, MA, 1999.
+    \bibitem{Pan} Pan, D., A Tutorial on MPEG/Audio Compression, IEEE Multimedia, Vol.2, pp.60-74, Summer 1998.
+\end{thebibliography}
 
 
 \end{document}

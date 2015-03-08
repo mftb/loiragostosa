@@ -58,7 +58,10 @@ extern int yydebug;
     PICTURE = 268,
     BREAK = 269,
     CIFRAO = 270,
-    MATH = 271
+    MATH = 271,
+    BIB_ITEM = 272,
+    BIB_START = 273,
+    CITE = 274
   };
 #endif
 
@@ -72,7 +75,7 @@ union YYSTYPE
 	char *str;
 	int  *intval;
 
-#line 76 "parser.h" /* yacc.c:1909  */
+#line 79 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

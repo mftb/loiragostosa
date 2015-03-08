@@ -3,14 +3,15 @@
 %}
 
 BREAK [\n]
-STRING [a-zA-Z0-9\.$(),:? !-][a-zA-Z0-9\.(),: ?!-]*
+STRING [a-zA-Z0-9\.$(),/:? !-][a-zA-Z0-9\.(),/: ?!-]*
 DU_HEADER 	[\\][d|u][a-zA-Z0-9]+\[[a-zA-Z0-9,]+\]\{[a-z]+\}[\n]+
 U_HEADER	  [\\][d|u][a-zA-Z0-9]+[a-zA-Z0-9,]+\{[a-z]+\}[\n]+
 AUTHOR		[\\][a][a-z]+[{][a-zA-Z1-9 ]+[}][\n]+
 LIST_START [ ]*\\begin\{itemize\}
 ITEM			 [ ]*\\item
 LIST_END	 [ ]*\\end\{itemize\}
-BIB_ITEM        [ ]*\\bibitem{[a-zA-Z0-9\.(),: ?!-]+}
+BIB_ITEM         [ ]*\\bibitem
+CITE            \\cite\{[a-zA-Z0-9\.(),: ?!-]+\}
 ANY_CHAR .
 MATH \$[a-zA-Z0-9\.(),\\: ?!-]+\$
 CIFRAO \\\$
@@ -29,7 +30,7 @@ CIFRAO \\\$
 "\\textbf"	{return BOLD;}
 "\\textit"	{return ITALIC;}
 "\\begin{thebibliography}"      {return BIB_START;}
-"\\end{thebibliography}"        {return BIB_END;}
+"\\end{thebibliography}"        /* ignore */ ;
 {LIST_START}	{return LIST_START;}
 {ITEM}	{return ITEM;}
 {LIST_END}	{return LIST_END;}
@@ -45,9 +46,10 @@ CIFRAO \\\$
 	yylval.str = (char *) strdup(yytext);
 	return MATH;
 }
-{BIB_ITEM} {
+{BIB_ITEM} {return BIB_ITEM;}
+{CITE} {
         yylval.str = (char *) strdup(yytext);
-        return BIB_ITEM;
+        return CITE;
 }
 {STRING} {	
 	yylval.str = (char *) strdup(yytext);

@@ -6,7 +6,7 @@
 
 char *concat(int count, ...);
 char title[1000];
-
+int refs;
 %}
  
 %union{
@@ -14,7 +14,7 @@ char title[1000];
 	int  *intval;
 }
 
-%token <str> T_STRING TITLE BEGIN_DOC END_DOC MAKE_TITLE BOLD ITALIC LIST_START ITEM LIST_END PICTURE BREAK CIFRAO MATH
+%token <str> T_STRING TITLE BEGIN_DOC END_DOC MAKE_TITLE BOLD ITALIC LIST_START ITEM LIST_END PICTURE BREAK CIFRAO MATH BIB_ITEM BIB_START CITE
 
 %type <str> phrase
 
@@ -29,7 +29,7 @@ stmt_list: 	stmt_list stmt
 ;
 
 stmt:
-	  BEGIN_DOC BREAK {printf("<body onload=\"myFunction()\">\n");}
+	  BEGIN_DOC BREAK {printf("<body>\n");}
 	| END_DOC BREAK {printf("</body>\n");}
 	|	MAKE_TITLE BREAK {printf("<h1>%s</h1>\n",title);}
 	| TITLE '{' T_STRING '}' BREAK {strcpy(title,$3);}
@@ -38,17 +38,22 @@ stmt:
 	| LIST_START BREAK {printf("<ul>\n");}
 	| ITEM T_STRING BREAK {printf("<li>%s</li>\n",$2);}
 	| LIST_END BREAK {printf("</ul>\n");} 
-	| PICTURE '{' T_STRING '}' BREAK {printf("<img src=\"%s\">\n",$3);}
 	| BREAK {printf("<br>\n");}
 	| phrase BREAK {printf("%s\n",$1);}
+        | BIB_START BREAK {printf("<h2>References</h2><br>\n");}
+        | BIB_ITEM '{' T_STRING '}' T_STRING BREAK{printf("<br><span id=%d name=\"%s\"></span>%s\n",refs++,$3,$5);}
 ;
 
 phrase:   phrase CIFRAO 					{$$ = concat(2,$1,"$");}
+        | phrase PICTURE '{' T_STRING '}'                       {$$ = concat(3,"<img src=\"",$4,"\">\n");}
 	| phrase T_STRING					{$$ = concat(2,$1,$2);}
         | phrase MATH						{$$ = concat(4,$1,"(",$2,")");}
+        | phrase CITE                                           {$$ = concat(2,$1,$2);}
 	| T_STRING						{$$ = $1;}
         | CIFRAO						{$$ = "$";}
         | MATH							{$$ = concat(3,"(",$1,")");}
+        | PICTURE '{' T_STRING '}'                              {$$ = concat(3,"<img src=\"",$3,"\">\n");}
+        | CITE                                                  {$$ = $1;}
 %%
  
 char* concat(int count, ...)
@@ -87,6 +92,7 @@ int yywrap(void) { return 1; }
  
 int main(int argc, char** argv)
 {
+                 refs = 0;
 		 printf("<html>\n");
 		 printf("<head>\n");
 		 printf("<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js\"></script>");
