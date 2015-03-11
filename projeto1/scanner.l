@@ -41,6 +41,8 @@ CIFRAO \\\$
 ";"	{return ';';}
 "}"	{return '}';}
 "{"	{return '{';}
+"[" {return '[';}
+"]" {return ']';}
 {CIFRAO} {return CIFRAO;}
 {MATH} {
 	yylval.str = (char *) strdup(yytext);

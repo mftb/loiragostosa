@@ -39,6 +39,7 @@ stmt:
 	| ITALIC '{' T_STRING '}' BREAK {printf("<i>%s</i>\n",$3);}
 	| LIST_START BREAK {printf("<ul>\n");}
 	| ITEM T_STRING BREAK {printf("<li>%s</li>\n",$2);}
+	| ITEM '[' T_STRING ']' T_STRING BREAK {printf("<br><b>%s</b> %s\n",$3,$5);}
 	| LIST_END BREAK {printf("</ul>\n");} 
 	| BREAK {printf("<br>\n");}
 	| phrase BREAK {printf("%s\n",$1);}
