@@ -18,12 +18,6 @@ que auxiliam a geração de código em LLVM-IR. Quase todas
 as classes estão prontas; apenas as seguintes precisam ser 
 implementadas: 
 
-// llvmasm/LlvmBranch.java
-// llvmasm/LlvmIcmp.java
-// llvmasm/LlvmMinus.java
-// llvmasm/LlvmTimes.java
-
-
 Todas as assinaturas de métodos e construtores 
 necessárias já estão lá. 
 
@@ -114,7 +108,7 @@ public class Codegen extends VisitorAdapter{
 		assembler.add(new LlvmCloseDefinition());
 		return null;
 	}
-	
+	// @@@@@@@@@@@@@@@@@ NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	public LlvmValue visit(Plus n){
 		LlvmValue v1 = n.lhs.accept(this);
 		LlvmValue v2 = n.rhs.accept(this);
@@ -138,6 +132,24 @@ public class Codegen extends VisitorAdapter{
 		assembler.add(new LlvmTimes(lhs,LlvmPrimitiveType.I32,v1,v2));
 		return lhs;
 	}
+    
+    public LlvmValue visit(Equal n){
+	    LlvmValue v1 = n.lhs.accept(this);
+		LlvmValue v2 = n.rhs.accept(this);
+		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
+		assembler.add(new LlvmIcmp(lhs,0,LlvmPrimitiveType.I32,v1,v2));
+		return lhs;
+    }
+
+    public LlvmValue visit(LessThan n){
+		LlvmValue v1 = n.lhs.accept(this);
+		LlvmValue v2 = n.rhs.accept(this);
+		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
+		assembler.add(new LlvmIcmp(lhs,1,LlvmPrimitiveType.I32,v1,v2));
+		return lhs;
+    }
+    
+    // @@@@@@@@@@@@@@@@@ END NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@
 	
 	public LlvmValue visit(Print n){
 
@@ -174,21 +186,6 @@ public class Codegen extends VisitorAdapter{
 		return new LlvmIntegerLiteral(n.value);
 	};
 	
-        public LlvmValue visit(Equal n){
-		LlvmValue v1 = n.lhs.accept(this);
-		LlvmValue v2 = n.rhs.accept(this);
-		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
-		assembler.add(new LlvmIcmp(lhs,0,LlvmPrimitiveType.I32,v1,v2));
-		return lhs;
-        }
-
-        public LlvmValue visit(LessThan n){
-		LlvmValue v1 = n.lhs.accept(this);
-		LlvmValue v2 = n.rhs.accept(this);
-		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
-		assembler.add(new LlvmIcmp(lhs,1,LlvmPrimitiveType.I32,v1,v2));
-		return lhs;
-        }
 
 	// Todos os visit's que devem ser implementados	
 	public LlvmValue visit(ClassDeclSimple n){return null;}
