@@ -137,7 +137,7 @@ public class Codegen extends VisitorAdapter{
 	    LlvmValue v1 = n.lhs.accept(this);
 		LlvmValue v2 = n.rhs.accept(this);
 		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
-		assembler.add(new LlvmIcmp(lhs,0,LlvmPrimitiveType.I32,v1,v2));
+		assembler.add(new LlvmIcmp(lhs,"eq",LlvmPrimitiveType.I32,v1,v2));
 		return lhs;
     }
 
@@ -145,7 +145,7 @@ public class Codegen extends VisitorAdapter{
 		LlvmValue v1 = n.lhs.accept(this);
 		LlvmValue v2 = n.rhs.accept(this);
 		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
-		assembler.add(new LlvmIcmp(lhs,1,LlvmPrimitiveType.I32,v1,v2));
+		assembler.add(new LlvmIcmp(lhs,"slt",LlvmPrimitiveType.I32,v1,v2));
 		return lhs;
     }
     

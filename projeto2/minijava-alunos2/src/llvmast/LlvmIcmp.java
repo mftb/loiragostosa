@@ -1,21 +1,19 @@
 package llvmast;
 public  class LlvmIcmp extends LlvmInstruction{
     public LlvmRegister lhs;
-    public int conditionCode;
+    public String conditionCode;
     public LlvmType type;
     public LlvmValue op1, op2;    
 
-    public LlvmIcmp(LlvmRegister lhs,  int conditionCode, LlvmType type, LlvmValue op1, LlvmValue op2){
-                this.lhs = lhs;
-                this.conditionCode = conditionCode;
-                this.type = type;
-                this.op1 = op1;
-                this.op2 = op2;
+    public LlvmIcmp(LlvmRegister lhs,  String conditionCode, LlvmType type, LlvmValue op1, LlvmValue op2){
+        this.lhs = lhs;
+        this.conditionCode = conditionCode;
+        this.type = type;
+        this.op1 = op1;
+        this.op2 = op2;
     }
 
     public String toString(){
-                String cond;
-                cond = (conditionCode == 0) ? "eq" : "slt";
 		return "  " +lhs + " = icmp "+ cond + " " + type + " " + op1 + ", " + op2;
     }
 }
