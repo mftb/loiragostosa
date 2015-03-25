@@ -174,6 +174,22 @@ public class Codegen extends VisitorAdapter{
 		return new LlvmIntegerLiteral(n.value);
 	};
 	
+        public LlvmValue visit(Equal n){
+		LlvmValue v1 = n.lhs.accept(this);
+		LlvmValue v2 = n.rhs.accept(this);
+		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
+		assembler.add(new LlvmIcmp(lhs,0,LlvmPrimitiveType.I32,v1,v2));
+		return lhs;
+        }
+
+        public LlvmValue visit(LessThan n){
+		LlvmValue v1 = n.lhs.accept(this);
+		LlvmValue v2 = n.rhs.accept(this);
+		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
+		assembler.add(new LlvmIcmp(lhs,1,LlvmPrimitiveType.I32,v1,v2));
+		return lhs;
+        }
+
 	// Todos os visit's que devem ser implementados	
 	public LlvmValue visit(ClassDeclSimple n){return null;}
 	public LlvmValue visit(ClassDeclExtends n){return null;}
@@ -190,8 +206,6 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(Assign n){return null;}
 	public LlvmValue visit(ArrayAssign n){return null;}
 	public LlvmValue visit(And n){return null;}
-	public LlvmValue visit(LessThan n){return null;}
-	public LlvmValue visit(Equal n){return null;}
 	public LlvmValue visit(ArrayLookup n){return null;}
 	public LlvmValue visit(ArrayLength n){return null;}
 	public LlvmValue visit(Call n){return null;}
