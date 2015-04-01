@@ -149,6 +149,13 @@ public class Codegen extends VisitorAdapter{
 		return lhs;
     }
     
+    public LlvmValue visit(True n){
+        return new LlvmBool(1);
+    }
+	public LlvmValue visit(False n){
+	    return new LlvmBool(0);
+	}
+    
     // @@@@@@@@@@@@@@@@@ END NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@
 	
 	public LlvmValue visit(Print n){
@@ -206,8 +213,6 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(ArrayLookup n){return null;}
 	public LlvmValue visit(ArrayLength n){return null;}
 	public LlvmValue visit(Call n){return null;}
-	public LlvmValue visit(True n){return null;}
-	public LlvmValue visit(False n){return null;}
 	public LlvmValue visit(IdentifierExp n){return null;}
 	public LlvmValue visit(This n){return null;}
 	public LlvmValue visit(NewArray n){return null;}
