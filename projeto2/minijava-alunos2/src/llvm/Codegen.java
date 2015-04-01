@@ -172,6 +172,13 @@ public class Codegen extends VisitorAdapter{
 		return lhs;
     }
     
+    public LlvmValue visit(IntegerType n){
+        return new LlvmRegister(LlvmPrimitiveType.I32);
+    }
+    public LlvmValue visit(BooleanType n){
+        return new LlvmRegister(LlvmPrimitiveType.I1);
+    }
+    
     // @@@@@@@@@@@@@@@@@ END NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@
 	
 	public LlvmValue visit(Print n){
@@ -217,8 +224,6 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(MethodDecl n){return null;}
 	public LlvmValue visit(Formal n){return null;}
 	public LlvmValue visit(IntArrayType n){return null;}
-	public LlvmValue visit(BooleanType n){return null;}
-	public LlvmValue visit(IntegerType n){return null;}
 	public LlvmValue visit(IdentifierType n){return null;}
 	public LlvmValue visit(Block n){return null;}
 	public LlvmValue visit(If n){return null;}
