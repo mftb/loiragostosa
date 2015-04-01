@@ -14,6 +14,6 @@ public  class LlvmIcmp extends LlvmInstruction{
     }
 
     public String toString(){
-		return "  " +lhs + " = icmp "+ cond + " " + type + " " + op1 + ", " + op2;
+		return "  " +lhs + " = icmp "+ conditionCode + " " + type + " " + op1 + ", " + op2;
     }
 }

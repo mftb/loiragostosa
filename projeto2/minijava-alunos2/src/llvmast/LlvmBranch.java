@@ -16,8 +16,9 @@ public  class LlvmBranch extends LlvmInstruction{
     }
 
     public String toString(){
-	    if (cond == null)
+	if (cond == null)
             return " br label %" + brTrue;
         else 
             return " br i1 " + cond + ", label %" + brTrue + ", label %" + brFalse;
+        }
 }
