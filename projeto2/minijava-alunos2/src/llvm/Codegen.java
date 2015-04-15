@@ -203,6 +203,22 @@ public class Codegen extends VisitorAdapter{
         return lhs;
     }
 
+    public LlvmValue visit(Assign n){
+        LlvmValue aux = n.var.accept (this);
+        LlvmValue lhs;
+        if (aux instanceof LlvmNamedValue) {
+            lhs = new LlvmNamedValue (aux.toString () + ".addr",
+            new LlvmPointer (aux.type));
+        }
+        else {
+            lhs = new LlvmNamedValue (aux.toString (),
+            new LlvmPointer (aux.type));
+        }
+        LlvmValue rhs = n.exp.accept (this);
+        assembler.add(new LlvmStore(rhs, lhs));
+        return null;
+    }
+
     // @@@@@@@@@@@@@@@@@ END NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@
 	
 	public LlvmValue visit(Print n){
