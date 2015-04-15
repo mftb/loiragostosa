@@ -194,7 +194,15 @@ public class Codegen extends VisitorAdapter{
         assembler.add(new LlvmLabel(endLabel));
         return null;
     }
- 
+
+    public LlvmValue visit(This n){
+        LlvmType classType = new LlvmPointer (new LlvmNamedClass("%" + classEnv.mangledName));
+        LlvmValue self = new LlvmNamedValue("%self.addr", new LlvmPointer(classType));
+        LlvmValue lhs = new LlvmRegister(classType);
+        assembler.add (new LlvmLoad(lhs, self));
+        return lhs;
+    }
+
     // @@@@@@@@@@@@@@@@@ END NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@
 	
 	public LlvmValue visit(Print n){
@@ -242,7 +250,6 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(IntArrayType n){return null;}
 	public LlvmValue visit(IdentifierType n){return null;}
 	public LlvmValue visit(Block n){return null;}
-	public LlvmValue visit(If n){return null;}
 	public LlvmValue visit(While n){return null;}
 	public LlvmValue visit(Assign n){return null;}
 	public LlvmValue visit(ArrayAssign n){return null;}
@@ -250,7 +257,6 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(ArrayLength n){return null;}
 	public LlvmValue visit(Call n){return null;}
 	public LlvmValue visit(IdentifierExp n){return null;}
-	public LlvmValue visit(This n){return null;}
 	public LlvmValue visit(NewArray n){return null;}
 	public LlvmValue visit(NewObject n){return null;}
 	public LlvmValue visit(Identifier n){return null;}
