@@ -178,7 +178,23 @@ public class Codegen extends VisitorAdapter{
     public LlvmValue visit(BooleanType n){
         return new LlvmRegister(LlvmPrimitiveType.I1);
     }
-    
+   
+    public LlvmValue visit(If n){
+        LlvmValue cond = n.condition.accept(this);
+        LlvmLabelValue thenLabel = new LlvmLabelCreator();
+        LlvmLabelValue elseLabel = new LlvmLabelCreator();
+        LlvmLabelValue endLabel = new LlvmLabelCreator();
+        assembler.add(new LlvmBranch(cond, thenLabel, elseLabel));
+        assembler.add(new LlvmLabel(thenLabel));
+        n.thenClause.accept(this);
+        assembler.add(new LlvmBranch(endLabel));
+        assembler.add(new LlvmLabel(elseLabel));
+        n.elseClause.accept(this);
+        assembler.add(new LlvmBranch(endLabel));
+        assembler.add(new LlvmLabel(endLabel));
+        return null;
+    }
+ 
     // @@@@@@@@@@@@@@@@@ END NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@
 	
 	public LlvmValue visit(Print n){
