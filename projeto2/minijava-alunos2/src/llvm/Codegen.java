@@ -267,7 +267,6 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(IdentifierType n){return null;}
 	public LlvmValue visit(Block n){return null;}
 	public LlvmValue visit(While n){return null;}
-	public LlvmValue visit(Assign n){return null;}
 	public LlvmValue visit(ArrayAssign n){return null;}
 	public LlvmValue visit(ArrayLookup n){return null;}
 	public LlvmValue visit(ArrayLength n){return null;}
@@ -334,8 +333,85 @@ public LlvmValue visit(ClassDeclSimple n){
 }
 
 class ClassNode extends LlvmType {
-	ClassNode (String nameClass, LlvmStructure classType, List<LlvmValue> varList){
-	}
+    String mangledName;
+    String name;
+    private List<LlvmValue> varList;
+    private List<LlvmType> types;
+    private Map<String,MethodNode> methods;
+    String parent;
+
+    ClassNode (String nameClass, String parent, List<LlvmType> classTypes,
+               List<LlvmValue> varList, Map<String,MethodNode> methods){
+        this.varList = varList;
+        this.types = classTypes;
+        this.methods = methods;
+        this.mangledName = mangle (nameClass);
+        this.name = nameClass;
+        this.parent = parent;
+    }
+
+    public  static String mangle (String a)   {
+        return "class_" + a;
+    }
+
+    public  static String demangle (String a)   {
+      return a.split("class_")[1];
+    }
+
+    public String toString () {
+        String methods = "";
+        if (this.methods != null) {
+            for (String key : this.methods.keySet ()) {
+                methods += this.methods.get (key);
+            }
+        }
+
+        if (varList != null)
+            return varList.toString () + " "
+                + this.getStructure ().toString () + methods;
+
+        return "[none]";
+    }
+    public MethodNode getMethod (String methodName) {
+        if (methods.containsKey (methodName)) {
+            return methods.get (methodName);
+        }
+        else if (parent != null) {
+            return Codegen.symTab.classes.get (parent).getMethod (methodName);
+        }
+        else
+            return null;
+    }
+    public LlvmValue getClassVariable (String variableName) {
+        for (LlvmValue c : varList) {
+            if (((LlvmNamedValue) c).name.equals (variableName))
+                return c;
+        }
+         if (parent != null) {
+            return Codegen.symTab.classes.get (parent).getClassVariable (variableName);
+        }
+        else
+            return null;
+    }
+    public LlvmStructure getStructure () {
+        ClassNode parent = this;
+        List<LlvmType> types = new LinkedList<LlvmType>();
+        while (parent != null) {
+            types.addAll (parent.types);
+            parent = Codegen.symTab.classes.get (parent.parent);
+        }
+        return new LlvmStructure (types);
+    }
+    public List<LlvmValue> getVarList () {
+        ClassNode parent = this;
+        List<LlvmValue> vars = new LinkedList<LlvmValue>();
+        while (parent != null) {
+            vars.addAll (parent.varList);
+            parent = Codegen.symTab.classes.get (parent.parent);
+        }
+
+        return vars;
+    }
 }
 
 class MethodNode {
