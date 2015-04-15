@@ -152,6 +152,7 @@ public class Codegen extends VisitorAdapter{
     public LlvmValue visit(True n){
         return new LlvmBool(1);
     }
+    
 	public LlvmValue visit(False n){
 	    return new LlvmBool(0);
 	}
@@ -175,6 +176,7 @@ public class Codegen extends VisitorAdapter{
     public LlvmValue visit(IntegerType n){
         return new LlvmRegister(LlvmPrimitiveType.I32);
     }
+    
     public LlvmValue visit(BooleanType n){
         return new LlvmRegister(LlvmPrimitiveType.I1);
     }
@@ -263,16 +265,12 @@ public class Codegen extends VisitorAdapter{
     }
 
     public LlvmValue visit(Call n){
-
-        // LlvmCall
         LlvmType type = n.type.accept(this).type;
         LlvmRegister lhs = new LlvmRegister(type);
         LlvmValue self = n.object.accept (this);
         List<LlvmValue> args = new LinkedList<LlvmValue>();
         LlvmValue casted_self;
-
         String method_name;
-
         if (n.object instanceof NewObject) {
             MethodNode aux = symTab.classes.get (((NewObject) n.object).className.toString ()).getMethod (n.method.s);
             method_name= aux.mangledName;
@@ -294,15 +292,11 @@ public class Codegen extends VisitorAdapter{
             method_name = symTab.classes.get(className).getMethod (n.method.s).mangledName;
             args.add (self);
         }
-
         int i = 1;
-
         LlvmNamedClass mangledClassName = (LlvmNamedClass) ((LlvmPointer)self.type).content;
         String className = classEnv.demangle(mangledClassName.name);
-
         List <LlvmType> arguments = symTab.classes.get(className).getMethod(n.method.s).types.parametersTypes;
         for (util.List<Exp> arg = n.actuals; arg != null; arg = arg.tail) {
-
             LlvmValue argument = (arg.head.accept(this));
             LlvmType correct_type =  arguments.get (i);
             if (argument.type != correct_type) {
@@ -314,7 +308,6 @@ public class Codegen extends VisitorAdapter{
                 args.add (argument);
             i++;
         }
-
         assembler.add(new LlvmCall(lhs, type, method_name, args));
         return lhs;
     }
@@ -324,43 +317,63 @@ public class Codegen extends VisitorAdapter{
       LlvmValue lhs = new LlvmRegister (new LlvmPointer (size.type));
       LlvmValue malloc_ret = new LlvmRegister (new LlvmPointer (LlvmPrimitiveType.I8));
       List<LlvmValue> numbers = new LinkedList<LlvmValue>();
-
-      // Alloc vector with an extra element at beginning to store vector length.
-
       if (size instanceof LlvmRegister) {
         LlvmRegister aux_register1 = new LlvmRegister (size.type);
         LlvmRegister aux_register2 = new LlvmRegister (size.type);
-
         assembler.add (new LlvmPlus (aux_register1, aux_register1.type,
                                      size, new LlvmIntegerLiteral (1)));
         assembler.add (new LlvmTimes (aux_register2, aux_register2.type,
                                      aux_register1, new LlvmIntegerLiteral (4)));
-
         numbers.add (aux_register2);
       }
       else {
         LlvmValue alloc_size= new LlvmIntegerLiteral ((((LlvmIntegerLiteral)size).value +1)*4);
         numbers.add (alloc_size);
       }
-
       assembler.add (new LlvmCall ((LlvmRegister)malloc_ret,
                                    new LlvmPointer (LlvmPrimitiveType.I8),
                                    "@malloc",
                                    numbers));
-
       assembler.add (new LlvmBitcast (lhs, malloc_ret,
                                       new LlvmPointer (LlvmPrimitiveType.I32)));
-
       if (size instanceof LlvmRegister) {
         LlvmRegister aux_register = new LlvmRegister (size.type);
         assembler.add (new LlvmMinus (aux_register, aux_register.type,
                                      size, new LlvmIntegerLiteral (1)));
       }
       assembler.add (new LlvmStore (size, lhs));
-
       return lhs;
     }
 
+    public LlvmValue visit(Identifier n){
+      ClassNode obj = symTab.classes.get (n.s);
+      if (obj != null) {
+        return new LlvmNamedValue ("%" + obj.mangledName,
+                                   new LlvmNamedClass ("%" + obj.mangledName));
+      }
+
+      for (LlvmValue c : methodEnv.varList) {
+          if (((LlvmNamedValue)c).name.equals (n.s))
+            return new LlvmNamedValue ("%" + c, c.type);
+      }
+      List<LlvmValue> varList = classEnv.getVarList ();
+      for (int i = 0; i < varList.size (); i++) {
+        LlvmNamedValue variable = (LlvmNamedValue) varList.get (i);
+        if (variable.name.equals (n.s)) {
+            LlvmType classType = new LlvmPointer (new LlvmNamedClass("%" + classEnv.mangledName));
+            LlvmValue self_addr = new LlvmNamedValue("%self.addr", new LlvmPointer(classType));
+            LlvmValue self = new LlvmRegister(classType);
+            LlvmValue element = new LlvmRegister (variable.type);
+            List<LlvmValue> offset = new LinkedList <LlvmValue>();
+            offset.add (new LlvmIntegerLiteral (0));
+            offset.add (new LlvmIntegerLiteral (i));
+            assembler.add (new LlvmLoad(self, self_addr));
+            assembler.add (new LlvmGetElementPointer (element, self, offset));
+            return element;
+          }
+      }
+      return null;
+    }
 
     // @@@@@@@@@@@@@@@@@ END NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@
 	
@@ -413,7 +426,6 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(ArrayLength n){return null;}
 	public LlvmValue visit(IdentifierExp n){return null;}
 	public LlvmValue visit(NewObject n){return null;}
-	public LlvmValue visit(Identifier n){return null;}
 }
 
 
