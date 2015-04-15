@@ -415,6 +415,44 @@ class ClassNode extends LlvmType {
 }
 
 class MethodNode {
+    List<LlvmValue> varList;
+    LlvmFunctionType types;
+    String mangledName;
+
+    MethodNode (String className, String methodName,
+                List<LlvmValue> varList, LlvmFunctionType types) {
+        this.varList = varList;
+        this.types = types;
+        this.mangledName = mangle (className, methodName);
+    }
+
+    String mangle (String className, String method) {
+        String args = "";
+        for (LlvmType c : types.parametersTypes) {
+            if (c instanceof LlvmPointer) {
+                LlvmPointer ptr = (LlvmPointer) c;
+                String arg = c.toString().substring(1, c.toString().length()-2);
+                args += "_" + arg;
+            }
+            else {
+                args += "_" + c.toString ();
+            }
+        }
+
+        return "@" + className + "_" + method + args;
+    };
+
+    public String toString () {
+        String local_variables = "Local Variables:\n\t\t";
+        for (LlvmValue c : varList) {
+            local_variables += " " + c.type.toString () + " " + c.toString () + ";\n\t\t";
+
+        }
+
+        return "\n\t" + mangledName + "( " + this.types.toString ()  + ")" +
+            "\n\t\t" +local_variables;
+    }
+
 }
 
 
