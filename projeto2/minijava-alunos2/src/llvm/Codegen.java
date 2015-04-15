@@ -290,37 +290,38 @@ class SymTab extends VisitorAdapter{
     private ClassNode classEnv;    //aponta para a classe em uso
 
     public LlvmValue FillTabSymbol(Program n){
-	n.accept(this);
-	return null;
-}
-public LlvmValue visit(Program n){
-	n.mainClass.accept(this);
+	    n.accept(this);
+	    return null;
+    }
 
-	for (util.List<ClassDecl> c = n.classList; c != null; c = c.tail)
-		c.head.accept(this);
+    public LlvmValue visit(Program n){
+	    n.mainClass.accept(this);
 
-	return null;
-}
+    	for (util.List<ClassDecl> c = n.classList; c != null; c = c.tail)
+		    c.head.accept(this);
 
-public LlvmValue visit(MainClass n){
-	classes.put(n.className.s, new ClassNode(n.className.s, null, null));
-	return null;
-}
+	    return null;
+    }
 
-public LlvmValue visit(ClassDeclSimple n){
-	List<LlvmType> typeList = null;
-	// Constroi TypeList com os tipos das variáveis da Classe (vai formar a Struct da classe)
+    public LlvmValue visit(MainClass n){
+	    classes.put(n.className.s, new ClassNode(n.className.s, null, null));
+    	return null;
+    }
+
+    public LlvmValue visit(ClassDeclSimple n){
+	    List<LlvmType> typeList = null;
+    	// Constroi TypeList com os tipos das variáveis da Classe (vai formar a Struct da classe)
 	
-	List<LlvmValue> varList = null;
-	// Constroi VarList com as Variáveis da Classe
+	    List<LlvmValue> varList = null;
+	    // Constroi VarList com as Variáveis da Classe
 
-	classes.put(n.name.s, new ClassNode(n.name.s, 
+	    classes.put(n.name.s, new ClassNode(n.name.s, 
 										new LlvmStructure(typeList), 
 										varList)
       			);
     	// Percorre n.methodList visitando cada método
-	return null;
-}
+    	return null;
+    }
 
 	public LlvmValue visit(ClassDeclExtends n){return null;}
 	public LlvmValue visit(VarDecl n){return null;}
@@ -454,7 +455,5 @@ class MethodNode {
     }
 
 }
-
-
 
 
