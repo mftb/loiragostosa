@@ -219,6 +219,22 @@ public class Codegen extends VisitorAdapter{
         return null;
     }
 
+    public LlvmValue visit(While n){
+        LlvmLabelValue conditionLabel = new LlvmLabelCreator();
+        LlvmLabelValue bodyLabel = new LlvmLabelCreator();
+        LlvmLabelValue endLabel = new LlvmLabelCreator();
+        assembler.add(new LlvmBranch(conditionLabel));
+        assembler.add(new LlvmLabel(conditionLabel));
+        LlvmValue cond = n.condition.accept(this);
+        assembler.add(new LlvmBranch(cond, bodyLabel, endLabel));
+        assembler.add(new LlvmLabel(bodyLabel));
+        n.body.accept(this);
+        assembler.add(new LlvmBranch(conditionLabel));
+        assembler.add(new LlvmLabel(endLabel));
+        return null;
+    }
+
+
     // @@@@@@@@@@@@@@@@@ END NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@
 	
 	public LlvmValue visit(Print n){
