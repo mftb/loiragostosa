@@ -234,6 +234,34 @@ public class Codegen extends VisitorAdapter{
         return null;
     }
 
+    public LlvmValue visit(ArrayAssign n){
+      LlvmValue ptrToArrayBase = n.var.accept (this);
+      LlvmValue arrayBase = new LlvmRegister (new LlvmPointer (((LlvmPointer)(ptrToArrayBase.type)).content));
+      if (ptrToArrayBase instanceof LlvmNamedValue)
+        assembler.add (new LlvmLoad (arrayBase, new LlvmNamedValue (ptrToArrayBase.toString () + ".addr",
+                                                                    new LlvmPointer (arrayBase.type))));
+      else
+        assembler.add (new LlvmLoad (arrayBase, new LlvmNamedValue (ptrToArrayBase.toString (),
+                                                                    new LlvmPointer (arrayBase.type))));
+
+      LlvmRegister elementPtr = new LlvmRegister (arrayBase.type);
+      List<LlvmValue> offsets = new LinkedList<LlvmValue> ();
+      LlvmValue index = n.index.accept (this);
+      if (index instanceof LlvmRegister) {
+        LlvmRegister aux_register = new LlvmRegister (index.type);
+        assembler.add (new LlvmPlus (aux_register, aux_register.type,
+                                     index, new LlvmIntegerLiteral (1)));
+        offsets.add (aux_register);
+      }
+      else {
+        ((LlvmIntegerLiteral) index).value += 1;
+        offsets.add (index);
+      }
+      assembler.add (new LlvmGetElementPointer (elementPtr, arrayBase, offsets));
+      assembler.add (new LlvmStore (n.value.accept (this), elementPtr));
+      return null;
+    }
+
 
     // @@@@@@@@@@@@@@@@@ END NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@
 	
@@ -282,8 +310,6 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(IntArrayType n){return null;}
 	public LlvmValue visit(IdentifierType n){return null;}
 	public LlvmValue visit(Block n){return null;}
-	public LlvmValue visit(While n){return null;}
-	public LlvmValue visit(ArrayAssign n){return null;}
 	public LlvmValue visit(ArrayLookup n){return null;}
 	public LlvmValue visit(ArrayLength n){return null;}
 	public LlvmValue visit(Call n){return null;}
