@@ -375,6 +375,196 @@ public class Codegen extends VisitorAdapter{
       return null;
     }
 
+    public LlvmValue visit(NewObject n){
+        LlvmValue rhs = n.className.accept (this);
+        LlvmRegister lhs = new LlvmRegister (new LlvmPointer (rhs.type));
+        LlvmRegister malloc_reg = new LlvmRegister (new LlvmPointer (LlvmPrimitiveType.I8));
+        List<LlvmValue> args = new LinkedList<LlvmValue>();
+        args.add (new LlvmIntegerLiteral (20));
+
+        assembler.add (new LlvmCall (malloc_reg,
+                                   new  LlvmPointer (LlvmPrimitiveType.I8),
+                                   "@malloc",
+                                   args));
+
+        assembler.add (new LlvmBitcast (lhs, malloc_reg,
+                                      new LlvmPointer (rhs.type)));
+
+      return lhs ;
+    }
+
+    public LlvmValue visit(VarDecl n){
+        String name = n.name.s;
+        return new LlvmNamedValue (name, (n.type.accept (this)).type);
+    }
+
+    public LlvmValue visit(IdentifierExp n){
+        LlvmValue address = n.name.accept (this);
+        LlvmRegister temp = new LlvmRegister (address.type);
+
+        if (address instanceof LlvmNamedValue)
+          assembler.add (new LlvmLoad (temp,
+                                       new LlvmNamedValue (address.toString () + ".addr",
+                                                           new LlvmPointer (address.type))));
+        else
+          assembler.add (new LlvmLoad (temp,
+                                       new LlvmNamedValue (address.toString (),
+                                                           new LlvmPointer (address.type))));
+        return temp;
+    }
+
+    public LlvmValue visit(MethodDecl n){
+        String name = n.name.s;
+        List <LlvmType> parameters_type = new LinkedList <LlvmType>();
+        List <LlvmValue> parameters = new LinkedList <LlvmValue>();
+        List <LlvmValue> localVars = new LinkedList <LlvmValue>();
+
+        parameters.add (new LlvmNamedValue ("self",
+                                            new LlvmPointer (new LlvmNamedClass ("%"+currentClassMangledName))));
+        parameters_type.add (new LlvmNamedClass (currentClassMangledName));
+
+        for (util.List<Formal> c = n.formals; c != null; c = c.tail) {
+            LlvmValue f = c.head.accept (this);
+            parameters_type.add (f.type);
+            parameters.add (f);
+        }
+
+        for (util.List<VarDecl> c = n.locals; c != null; c = c.tail) {
+            parameters.add (c.head.accept (this));
+        }
+
+        return new LlvmNamedFunction (name,
+                                      new LlvmFunctionType (n.returnType.accept (this).type,
+                                                            parameters_type),
+                                      parameters);
+    }
+
+    public LlvmValue visit(ArrayLength n){
+        LlvmValue array = n.array.accept (this);
+
+        LlvmRegister elementPtr = new LlvmRegister (array.type);
+        List<LlvmValue> offsets = new LinkedList<LlvmValue> ();
+
+        offsets.add (new LlvmIntegerLiteral (0));
+
+        assembler.add (new LlvmGetElementPointer (elementPtr, array, offsets));
+
+        LlvmRegister lhs = new LlvmRegister (((LlvmPointer)(array.type)).content);
+        assembler.add (new LlvmLoad (lhs, elementPtr));
+        return lhs;
+    }
+
+     public LlvmValue visit(ArrayLookup n){
+
+        LlvmValue array = n.array.accept (this);
+
+        LlvmRegister elementPtr = new LlvmRegister (array.type);
+        List<LlvmValue> offsets = new LinkedList<LlvmValue> ();
+        LlvmValue index = n.index.accept (this);
+
+        if (index instanceof LlvmRegister) {
+        LlvmRegister aux_register = new LlvmRegister (index.type);
+        assembler.add (new LlvmPlus (aux_register, aux_register.type,
+                                     index, new LlvmIntegerLiteral (1)));
+        offsets.add (aux_register);
+        }
+        else {
+        ((LlvmIntegerLiteral) index).value += 1;
+        offsets.add (index);
+        }
+
+        assembler.add (new LlvmGetElementPointer (elementPtr, array, offsets));
+
+        LlvmRegister lhs = new LlvmRegister (((LlvmPointer)(array.type)).content);
+        assembler.add (new LlvmLoad (lhs, elementPtr));
+        return lhs;
+    }
+
+    public LlvmValue visit(Block n){
+        for (util.List<Statement> s = n.body; s != null; s = s.tail) {
+            s.head.accept(this);
+        }
+        return null;
+    }
+
+    public LlvmValue visit(IdentifierType n){
+        return new LlvmRegister(new LlvmPointer(new LlvmNamedClass("%" + classEnv.mangle(n.name))));
+    }
+
+    public LlvmValue visit(IntArrayType n){
+        return new LlvmRegister(new LlvmPointer(LlvmPrimitiveType.I32));
+    }
+
+    public LlvmValue visit(Formal n){
+
+        return new LlvmNamedValue("%" + n.name.s, n.type.accept(this).type);
+    }
+
+    public LlvmValue visit(ClassDeclSimple n){
+        List<LlvmType> typeList = new LinkedList<LlvmType>();
+        List<LlvmValue> varList = new LinkedList<LlvmValue>();
+        Map<String, MethodNode> methodsList = new HashMap<String, MethodNode>();
+    
+        // variaveis da classe
+        for (util.List<VarDecl> c = n.varList; c != null; c = c.tail) {
+            LlvmValue aux = c.head.accept (this);
+            varList.add (aux);
+            typeList.add (aux.type);
+        }
+
+        // metodos da classe
+        currentClassMangledName = ClassNode.mangle (n.name.s);
+        for (util.List<MethodDecl> c = n.methodList; c != null; c = c.tail) {
+            LlvmValue method = c.head.accept (this);
+            LlvmFunctionType formal = (LlvmFunctionType) method.type;
+
+            methodsList.put (c.head.name.s, new MethodNode (n.name.s,
+                                                            c.head.name.s,
+                                                            ((LlvmNamedFunction) method).argList,
+                                                            formal));
+        }
+
+        classes.put(n.name.s, new ClassNode(n.name.s,
+                                            null,
+                                            typeList,
+                                            varList,
+                                            methodsList));
+
+        return null;
+    }
+
+    public LlvmValue visit(ClassDeclExtends n){
+        List<LlvmType> typeList = new LinkedList<LlvmType>();
+        List<LlvmValue> varList = new LinkedList<LlvmValue>();
+        Map<String, MethodNode> methodsList = new HashMap<String, MethodNode>();
+
+        for (util.List<VarDecl> c = n.varList; c != null; c = c.tail) {
+            LlvmValue aux = c.head.accept (this);
+            varList.add (aux);
+            typeList.add (aux.type);
+        }
+
+        currentClassMangledName = ClassNode.mangle (n.name.s);
+        for (util.List<MethodDecl> c = n.methodList; c != null; c = c.tail) {
+            LlvmValue method = c.head.accept (this);
+            LlvmFunctionType formal = (LlvmFunctionType) method.type;
+
+            methodsList.put (c.head.name.s, new MethodNode (n.name.s,
+                                                            c.head.name.s,
+                                                            ((LlvmNamedFunction) method).argList,
+                                                            formal));
+        }
+
+        classes.put(n.name.s, new ClassNode(n.name.s,
+                                            n.superClass.s,
+                                            typeList,
+                                            varList,
+                                            methodsList));
+
+
+        return null;
+    }
+
     // @@@@@@@@@@@@@@@@@ END NOSSAS CHAMADAS DE VISITS @@@@@@@@@@@@@@@@@@@@@@@@@
 	
 	public LlvmValue visit(Print n){
@@ -414,18 +604,8 @@ public class Codegen extends VisitorAdapter{
 	
 
 	// Todos os visit's que devem ser implementados	
-	public LlvmValue visit(ClassDeclSimple n){return null;}
-	public LlvmValue visit(ClassDeclExtends n){return null;}
-	public LlvmValue visit(VarDecl n){return null;}
-	public LlvmValue visit(MethodDecl n){return null;}
-	public LlvmValue visit(Formal n){return null;}
-	public LlvmValue visit(IntArrayType n){return null;}
-	public LlvmValue visit(IdentifierType n){return null;}
-	public LlvmValue visit(Block n){return null;}
-	public LlvmValue visit(ArrayLookup n){return null;}
-	public LlvmValue visit(ArrayLength n){return null;}
-	public LlvmValue visit(IdentifierExp n){return null;}
-	public LlvmValue visit(NewObject n){return null;}
+
+
 }
 
 
