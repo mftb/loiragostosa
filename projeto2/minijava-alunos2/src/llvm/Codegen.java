@@ -39,7 +39,7 @@ public class Codegen extends VisitorAdapter{
 	private List<LlvmInstruction> assembler;
 	private Codegen codeGenerator;
 
-  	private SymTab symTab;
+  	static public SymTab symTab;
 	private ClassNode classEnv; 	// Aponta para a classe atualmente em uso em symTab
 	private MethodNode methodEnv; 	// Aponta para a metodo atualmente em uso em symTab
 
@@ -456,23 +456,41 @@ class SymTab extends VisitorAdapter{
     }
 
     public LlvmValue visit(MainClass n){
-	    classes.put(n.className.s, new ClassNode(n.className.s, null, null));
+	    classes.put(n.className.s, new ClassNode(n.className.s, null, null,null,null));
     	return null;
     }
 
     public LlvmValue visit(ClassDeclSimple n){
-	    List<LlvmType> typeList = null;
-    	// Constroi TypeList com os tipos das variáveis da Classe (vai formar a Struct da classe)
-	
-	    List<LlvmValue> varList = null;
-	    // Constroi VarList com as Variáveis da Classe
+        List<LlvmType> typeList = new LinkedList<LlvmType>();
+        List<LlvmValue> varList = new LinkedList<LlvmValue>();
+        Map<String, MethodNode> methodsList = new HashMap<String, MethodNode>();
 
-	    classes.put(n.name.s, new ClassNode(n.name.s, 
-										new LlvmStructure(typeList), 
-										varList)
-      			);
-    	// Percorre n.methodList visitando cada método
-    	return null;
+        for (util.List<VarDecl> c = n.varList; c != null; c = c.tail) {
+            LlvmValue aux = c.head.accept (this);
+            varList.add (aux);
+            typeList.add (aux.type);
+        }
+
+        currentClassMangledName = ClassNode.mangle (n.name.s);
+        for (util.List<MethodDecl> c = n.methodList; c != null; c = c.tail) {
+            LlvmValue method = c.head.accept (this);
+            LlvmFunctionType formal = (LlvmFunctionType) method.type;
+
+            methodsList.put (c.head.name.s, new MethodNode (n.name.s,
+                                                            c.head.name.s,
+                                                            ((LlvmNamedFunction) method).argList,
+                                                            formal));
+        }
+
+
+        classes.put(n.name.s, new ClassNode(n.name.s,
+                                            null,
+                                            typeList,
+                                            varList,
+                                            methodsList));
+
+
+        return null;
     }
 
     public LlvmValue visit(ClassDeclExtends n){
