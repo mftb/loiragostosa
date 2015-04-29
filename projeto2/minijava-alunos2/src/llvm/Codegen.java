@@ -190,15 +190,19 @@ public class Codegen extends VisitorAdapter{
         // cria as labels        
         LlvmLabelValue thenLabel = new LlvmLabelCreator();
         LlvmLabelValue elseLabel = new LlvmLabelCreator();
-        LlvmLabelValue endLabel = new LlvmLabelCreator();
-        
+        LlvmLabelValue endLabel = new LlvmLabelCreator(); 
         assembler.add(new LlvmBranch(cond, thenLabel, elseLabel));
+        
+        // then label
         assembler.add(new LlvmLabel(thenLabel));
         n.thenClause.accept(this);
         assembler.add(new LlvmBranch(endLabel));
+
+        // else label
         assembler.add(new LlvmLabel(elseLabel));
         n.elseClause.accept(this);
         assembler.add(new LlvmBranch(endLabel));
+
         assembler.add(new LlvmLabel(endLabel));
         return null;
     }
@@ -421,7 +425,7 @@ public class Codegen extends VisitorAdapter{
 
     public LlvmValue visit(MethodDecl n){
         methodEnv = symTab.classes.get (classEnv.name).getMethod (n.name.s);
-        /* Method header (define) */
+
         List<LlvmValue> args = new LinkedList<LlvmValue>();
         args.add (new LlvmNamedValue ("%self",
                                       new LlvmPointer (new LlvmNamedClass ("%"+classEnv.mangledName))));
@@ -433,7 +437,6 @@ public class Codegen extends VisitorAdapter{
                     n.returnType.accept(this).type,
                     args));
 
-        /* Method body */
         for (LlvmValue var : methodEnv.varList) {
             LlvmNamedValue retval = new LlvmNamedValue ("%" +((LlvmNamedValue) var).name+ ".addr",
                                                         var.type);
@@ -457,10 +460,8 @@ public class Codegen extends VisitorAdapter{
             s.head.accept (this);
         }
 
-        /* Return expression */
         assembler.add(new LlvmRet(n.returnExp.accept (this)));
 
-        /* Method end (close braces) */
         assembler.add(new LlvmCloseDefinition());
 
         return null;
@@ -544,7 +545,6 @@ public class Codegen extends VisitorAdapter{
         assembler.add (new LlvmStructureDeclaration (symTab.classes.get (n.name.s).mangledName,
                                                      symTab.classes.get (n.name.s).getStructure ()));
 
-        /* Visit all class methods */
         for (util.List<MethodDecl> m = n.methodList; m != null; m = m.tail)
             m.head.accept(this);
 
@@ -588,10 +588,6 @@ public class Codegen extends VisitorAdapter{
 		return new LlvmIntegerLiteral(n.value);
 	};
 	
-
-	// Todos os visit's que devem ser implementados	
-
-
 }
 
 
