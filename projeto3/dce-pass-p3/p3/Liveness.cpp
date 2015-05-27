@@ -1,4 +1,10 @@
 #define DEBUG_TYPE "printCode"
+#include <unistd.h>
+#include <stdio.h>
+#include "llvm/ADT/PostOrderIterator.h"
+#include "llvm/ADT/SCCIterator.h"
+#include "llvm/ADT/GraphTraits.h"
+#include "llvm/Analysis/CFG.h"
 #include "llvm/Pass.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Function.h"
@@ -14,7 +20,9 @@
 #include <set>
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/CFG.h"
+
 using namespace llvm;
+
 
 namespace {
   DenseMap<const Instruction*, int> instMap;
@@ -47,41 +55,65 @@ namespace {
 
     void computeBBGenKill(Function &F, DenseMap<const BasicBlock*, genKill> &bbMap) 
     {
-      for (Function::iterator b = F.begin(), e = F.end(); b != e; ++b) {
+      for (scc_iterator<Function *> b = scc_begin(&F), e = scc_end(&F); b != e; ++b) {
+        const std::vector<BasicBlock *> &SCCBBs = *b;
         genKill s;
-        for (BasicBlock::iterator i = b->begin(), e = b->end(); i != e; ++i) {
-          // The GEN set is the set of upwards-exposed uses:
-          // pseudo-registers that are used in the block before being
-          // defined. (Those will be the pseudo-registers that are defined
-          // in other blocks, or are defined in the current block and used
-          // in a phi function at the start of this block.) 
-          unsigned n = i->getNumOperands();
-          for (unsigned j = 0; j < n; j++) {
-            Value *v = i->getOperand(j);
-            if (isa<Instruction>(v)) {
-              Instruction *op = cast<Instruction>(v);
-              if (!s.kill.count(op))
-                s.gen.insert(op);
+        for (std::vector<BasicBlock *>::const_iterator BBI = SCCBBs.begin(), BBIE = SCCBBs.end(); BBI != BBIE; ++BBI) {
+            for (BasicBlock::iterator i = (*BBI)->begin(), ie = (*BBI)->end(); i != ie; ++i) {
+              // The GEN set is the set of upwards-exposed uses:
+              // pseudo-registers that are used in the block before being
+              // defined. (Those will be the pseudo-registers that are defined
+              // in other blocks, or are defined in the current block and used
+              // in a phi function at the start of this block.) 
+              unsigned n = i->getNumOperands();
+              for (unsigned j = 0; j < n; j++) {
+                Value *v = i->getOperand(j);
+                if (isa<Instruction>(v)) {
+                  Instruction *op = cast<Instruction>(v);
+                  if (!s.kill.count(op))
+                    s.gen.insert(op);
+                }
+              }
+              // For the KILL set, you can use the set of all instructions
+              // that are in the block (which safely includes all of the
+              // pseudo-registers assigned to in the block).
+              s.kill.insert(&*i);
             }
+            bbMap.insert(std::make_pair(&*(*BBI), s));
           }
-          // For the KILL set, you can use the set of all instructions
-          // that are in the block (which safely includes all of the
-          // pseudo-registers assigned to in the block).
-          s.kill.insert(&*i);
-        }
-        bbMap.insert(std::make_pair(&*b, s));
       }
     }
 
+    // O PROBLEMA ESTA AQUI \/
     // Do this using a worklist algorithm (where the items in the worklist are basic blocks).
     void computeBBBeforeAfter(Function &F, DenseMap<const BasicBlock*, genKill> &bbGKMap,
                               DenseMap<const BasicBlock*, beforeAfter> &bbBAMap)
     {
+      /*
+      W <- the set of all nodes
+      while W is not empty
+        remove a node n from W
+        old <- in[n]
+        foreach t in succ[n], out[n] <- U in[t]
+        in[n] <- (out[n] - def[n]) U use[n]
+        if old != in[n]
+            foreach t in pred[n]
+                put t in W
+      */
+      int count = 0;
       SmallVector<BasicBlock*, 32> workList;
-      workList.push_back(--F.end());
-
+      for (scc_iterator<Function *> I = scc_begin(&F), IE = scc_end(&F); I != IE; ++I) {
+        const std::vector<BasicBlock *> &SCCBBs = *I;
+        for (std::vector<BasicBlock *>::const_iterator BBI = SCCBBs.begin(), BBIE = SCCBBs.end(); BBI != BBIE; ++BBI) {
+            workList.push_back(*BBI);
+        }
+      }
+      //workList.push_back(--F.end());
+      count++;
       while (!workList.empty()) {
+        errs() << "COUNT: " << count << '\n'; 
         BasicBlock *b = workList.pop_back_val();
+        count--;
         beforeAfter b_beforeAfter = bbBAMap.lookup(b);
         bool shouldAddPred = !bbBAMap.count(b);
         genKill b_genKill = bbGKMap.lookup(b);
@@ -92,7 +124,6 @@ namespace {
           std::set<const Instruction*> s(bbBAMap.lookup(*SI).before);
           a.insert(s.begin(), s.end());
         }
-
         if (a != b_beforeAfter.after){
           shouldAddPred = true;
           b_beforeAfter.after = a;
@@ -104,8 +135,10 @@ namespace {
         }
         
         if (shouldAddPred)
-          for (pred_iterator PI = pred_begin(b), E = pred_end(b); PI != E; ++PI)
+          for (pred_iterator PI = pred_begin(b), E = pred_end(b); PI != E; ++PI){
             workList.push_back(*PI);
+            count++;
+            }
       }
     }
     
@@ -149,9 +182,10 @@ namespace {
     // runOnFunction
     //**********************************************************************
     virtual bool runOnFunction(Function &F) {
+      errs() << "Entrou na funcao: " << F.getName() << '\n';
       // Iterate over the instructions in F, creating a map from instruction address to unique integer.
       addToMap(F);
-
+      errs() << "Adicionou a funcao ao mapa\n";
       bool changed = false;
 
       // LLVM Value classes already have use information. But for the sake of learning, we will implement the iterative algorithm.
@@ -159,16 +193,15 @@ namespace {
       DenseMap<const BasicBlock*, genKill> bbGKMap;
       // For each basic block in the function, compute the block's GEN and KILL sets.
       computeBBGenKill(F, bbGKMap);
-
+      errs() << "Calculou o GenKill da funcao\n";
       DenseMap<const BasicBlock*, beforeAfter> bbBAMap;
       // For each basic block in the function, compute the block's liveBefore and liveAfter sets.
       computeBBBeforeAfter(F, bbGKMap, bbBAMap);
-
+      errs() << "Calculou o Before e After dos BBs \n";
       DenseMap<const Instruction*, beforeAfter> iBAMap;
       computeIBeforeAfter(F, bbBAMap, iBAMap);
-      errs() << F.getName() << '\n';
+      errs() << "Calculou o Before e Afters das instrucoes\n";
       for (inst_iterator i = inst_begin(F), E = inst_end(F); i != E; ++i) {
-        errs() << *i;
         beforeAfter s = iBAMap.lookup(&*i);
         errs() << "%" << instMap.lookup(&*i) << ": { ";
         std::for_each(s.before.begin(), s.before.end(), print_elem);
@@ -176,8 +209,12 @@ namespace {
         std::for_each(s.after.begin(), s.after.end(), print_elem);
         errs() << "}\n";
       }
+<<<<<<< HEAD
         errs() << "NADA\n";
 
+=======
+      errs() << "GG\n";
+>>>>>>> 7b1bb587f317bbc8ce3f5098edcc4a9279b3120c
 
 
       return changed;

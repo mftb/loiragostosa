@@ -1,0 +1,2 @@
+g++ -Wall -Wextra -fvisibility=hidden -I/usr/include  -DNDEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O3 -fomit-frame-pointer -std=c++11 -fvisibility-inlines-hidden -fno-exceptions -fPIC -Woverloaded-virtual -ffunction-sections -fdata-sections -Wcast-qual    -c -o p3/Liveness.o p3/Liveness.cpp
+<builtin>: recipe for target 'p3/Liveness.o' failed

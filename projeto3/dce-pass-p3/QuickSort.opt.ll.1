@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-; ModuleID = 'tests/QuickSort.ll'
+; ModuleID = '../dce-tests/minijava/QuickSort.ll'
 
 %class.QS = type { [4 x i8*], { i32, i32* }*, i32 }
 %class.QuickSort = type {}
@@ -394,5 +393,3 @@ entry0:
 declare i32 @printf(i8*, ...)
 
 declare i8* @malloc(i32)
-=======
->>>>>>> 7b1bb587f317bbc8ce3f5098edcc4a9279b3120c
