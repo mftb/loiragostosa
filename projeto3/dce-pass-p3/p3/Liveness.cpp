@@ -209,12 +209,9 @@ namespace {
         std::for_each(s.after.begin(), s.after.end(), print_elem);
         errs() << "}\n";
       }
-<<<<<<< HEAD
+
         errs() << "NADA\n";
 
-=======
-      errs() << "GG\n";
->>>>>>> 7b1bb587f317bbc8ce3f5098edcc4a9279b3120c
 
 
       return changed;
