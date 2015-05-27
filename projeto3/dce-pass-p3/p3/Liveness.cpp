@@ -176,7 +176,7 @@ namespace {
         std::for_each(s.after.begin(), s.after.end(), print_elem);
         errs() << "}\n";
       }
-        errs() << "OUT\n";
+        errs() << "NADA\n";
 
 
 

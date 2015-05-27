@@ -13,7 +13,6 @@ entry0:
   %tmp1 = bitcast i8* %tmp2 to %class.QS*
   call void @__QS_QS(%class.QS* %tmp1)
   %tmp3 = call i32 @__Start_QS(%class.QS* %tmp1, i32 10)
-  %tmp4 = getelementptr [4 x i8]* @.formatting.string, i32 0, i32 0
   %tmp5 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @.formatting.string, i32 0, i32 0), i32 %tmp3)
   %tmp6 = load i32* %tmp0
   ret i32 %tmp6
@@ -31,7 +30,6 @@ entry0:
   %tmp3 = bitcast %class.QS* %this to %class.QS*
   %tmp4 = call i32 @__Print_QS(%class.QS* %tmp3)
   store i32 %tmp4, i32* %aux01
-  %tmp5 = getelementptr [4 x i8]* @.formatting.string, i32 0, i32 0
   %tmp6 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @.formatting.string, i32 0, i32 0), i32 9999)
   %tmp7 = getelementptr %class.QS* %this, i32 0, i32 2
   %tmp8 = load i32* %tmp7
@@ -290,7 +288,6 @@ do1:                                              ; preds = %while3
   %tmp9 = load i32* %j
   %tmp8 = getelementptr i32* %tmp7, i32 %tmp9
   %tmp10 = load i32* %tmp8
-  %tmp11 = getelementptr [4 x i8]* @.formatting.string, i32 0, i32 0
   %tmp12 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @.formatting.string, i32 0, i32 0), i32 %tmp10)
   %tmp13 = load i32* %j
   %tmp14 = add i32 %tmp13, 1
