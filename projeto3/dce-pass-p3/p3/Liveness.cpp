@@ -14,6 +14,7 @@
 #include <set>
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/CFG.h"
+
 using namespace llvm;
 
 namespace {
@@ -150,6 +151,7 @@ namespace {
     //**********************************************************************
     virtual bool runOnFunction(Function &F) {
       // Iterate over the instructions in F, creating a map from instruction address to unique integer.
+      errs() << "Entrou na funcao: " << F.getName() << '\n' ;
       addToMap(F);
 
       bool changed = false;
@@ -166,17 +168,16 @@ namespace {
 
       DenseMap<const Instruction*, beforeAfter> iBAMap;
       computeIBeforeAfter(F, bbBAMap, iBAMap);
-      errs() << F.getName() << '\n';
       for (inst_iterator i = inst_begin(F), E = inst_end(F); i != E; ++i) {
         errs() << *i;
         beforeAfter s = iBAMap.lookup(&*i);
-        errs() << "%" << instMap.lookup(&*i) << ": { ";
+        errs() << " %" << instMap.lookup(&*i) << ": { ";
         std::for_each(s.before.begin(), s.before.end(), print_elem);
         errs() << "} { ";
         std::for_each(s.after.begin(), s.after.end(), print_elem);
         errs() << "}\n";
       }
-        errs() << "Chupa minha rola\n";
+      errs() << "Terminou a funcao: " << F.getName() << '\n' ;
 
 
 
