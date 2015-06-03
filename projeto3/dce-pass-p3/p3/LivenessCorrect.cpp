@@ -18,8 +18,10 @@
 #include "llvm/IR/User.h"
 #include "llvm/IR/Instructions.h"
 #include <set>
+#include <queue>
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/CFG.h"
+#include "llvm/IR/IntrinsicInst.h"
 
 using namespace llvm;
 
@@ -100,20 +102,19 @@ namespace {
             foreach t in pred[n]
                 put t in W
       */
-      int count = 0;
+
       SmallVector<BasicBlock*, 32> workList;
-      for (scc_iterator<Function *> I = scc_begin(&F), IE = scc_end(&F); I != IE; ++I) {
+      /*for (scc_iterator<Function *> I = scc_begin(&F), IE = scc_end(&F); I != IE; ++I) {
         const std::vector<BasicBlock *> &SCCBBs = *I;
         for (std::vector<BasicBlock *>::const_iterator BBI = SCCBBs.begin(), BBIE = SCCBBs.end(); BBI != BBIE; ++BBI) {
             workList.push_back(*BBI);
         }
       }
-      //workList.push_back(--F.end());
-      count++;
+       */
+      workList.push_back(--F.end());
+
       while (!workList.empty()) {
-        errs() << "COUNT: " << count << '\n'; 
         BasicBlock *b = workList.pop_back_val();
-        count--;
         beforeAfter b_beforeAfter = bbBAMap.lookup(b);
         bool shouldAddPred = !bbBAMap.count(b);
         genKill b_genKill = bbGKMap.lookup(b);
@@ -137,7 +138,6 @@ namespace {
         if (shouldAddPred)
           for (pred_iterator PI = pred_begin(b), E = pred_end(b); PI != E; ++PI){
             workList.push_back(*PI);
-            count++;
             }
       }
     }
@@ -182,10 +182,10 @@ namespace {
     // runOnFunction
     //**********************************************************************
     virtual bool runOnFunction(Function &F) {
-      errs() << "Entrou na funcao: " << F.getName() << '\n';
+
       // Iterate over the instructions in F, creating a map from instruction address to unique integer.
       addToMap(F);
-      errs() << "Adicionou a funcao ao mapa\n";
+
       bool changed = false;
 
       // LLVM Value classes already have use information. But for the sake of learning, we will implement the iterative algorithm.
@@ -193,14 +193,15 @@ namespace {
       DenseMap<const BasicBlock*, genKill> bbGKMap;
       // For each basic block in the function, compute the block's GEN and KILL sets.
       computeBBGenKill(F, bbGKMap);
-      errs() << "Calculou o GenKill da funcao\n";
+
       DenseMap<const BasicBlock*, beforeAfter> bbBAMap;
       // For each basic block in the function, compute the block's liveBefore and liveAfter sets.
       computeBBBeforeAfter(F, bbGKMap, bbBAMap);
-      errs() << "Calculou o Before e After dos BBs \n";
+
       DenseMap<const Instruction*, beforeAfter> iBAMap;
       computeIBeforeAfter(F, bbBAMap, iBAMap);
-      errs() << "Calculou o Before e Afters das instrucoes\n";
+
+
       for (inst_iterator i = inst_begin(F), E = inst_end(F); i != E; ++i) {
         beforeAfter s = iBAMap.lookup(&*i);
         errs() << "%" << instMap.lookup(&*i) << ": { ";
@@ -210,9 +211,35 @@ namespace {
         errs() << "}\n";
       }
 
-        errs() << "NADA\n";
+      std::queue < inst_iterator > delQueue;
+      for (inst_iterator i = inst_begin(F), E = inst_end(F); i != E; ++i) {
+          beforeAfter s = iBAMap.lookup(&*i);
 
+          // if instruction not in live out
+          if(!s.after.count(&*i)){
+            if(!i->mayHaveSideEffects()){
+                  if(!isa<TerminatorInst>(&*i)){
+                    if(!isa<DbgInfoIntrinsic>(&*i)){
+                      if(!isa<LandingPadInst>(&*i)){
+                        /////errs() << "QUERO REMOVER A INST: " << instMap.lookup(&*i) << "\n\n";
+                        delQueue.push(i);
 
+                      } 
+                    } 
+                  }
+              }
+          } 
+            
+      }
+      static int removeCount = 0;
+      while ( delQueue.size() )
+      {
+        changed = true;
+        inst_iterator I = delQueue.front();
+        delQueue.pop();
+        (I)->eraseFromParent();
+        removeCount++;
+      }
 
       return changed;
     }
